@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Story Game PKN - Warga Negara Hebat</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: linear-gradient(180deg, #0f172a 0%, #111827 45%, #020617 100%);
+    }
+    .glass {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .fade-in { animation: fadeIn .35s ease; }
+    .card-hover:hover { transform: translateY(-3px) scale(1.01); }
+    .pulse-soft { animation: pulseSoft 1.8s infinite; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulseSoft {
+      0%,100% { box-shadow: 0 0 0 0 rgba(244,114,182,0.25); }
+      50% { box-shadow: 0 0 0 10px rgba(244,114,182,0); }
+    }
+  </style>
+</head>
+<body class="text-white min-h-screen">
+  <div class="max-w-7xl mx-auto px-4 py-6">
+    <header class="glass rounded-3xl p-6 shadow-2xl mb-6">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <p class="uppercase tracking-[0.35em] text-fuchsia-300 text-xs mb-2">Story Game Edukasi PKN</p>
+          <h1 class="text-3xl md:text-5xl font-extrabold">Warga Negara Hebat</h1>
+          <p class="text-slate-200 mt-3 max-w-3xl">Jalani cerita interaktif sebagai pelajar yang menghadapi berbagai situasi PKN di sekolah, rumah, dan masyarakat. Setiap pilihan memengaruhi moral, tanggung jawab, sosial, pengetahuan, XP, level, dan ending ceritamu.</p>
+        </div>
+        <button id="resetBtn" class="bg-slate-800/70 border border-slate-500 px-5 py-3 rounded-2xl font-semibold hover:bg-slate-700 transition">Reset Game</button>
+      </div>
+    </header>
+
+    <div class="grid xl:grid-cols-4 gap-6">
+      <aside class="xl:col-span-1 space-y-6">
+        <div class="glass rounded-3xl p-5 shadow-xl">
+          <div class="flex items-center gap-4 mb-5">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-fuchsia-300 to-cyan-400 flex items-center justify-center text-3xl">🎭</div>
+            <div>
+              <h2 class="text-xl font-bold">Identitas Karakter</h2>
+              <p id="playerNameDisplay" class="text-slate-300 text-sm">Belum ada pemain</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <div class="bg-slate-900/50 rounded-2xl p-4 border border-slate-700">
+              <p class="text-slate-300 text-sm">Level</p>
+              <p id="levelEl" class="text-2xl font-extrabold text-yellow-300">1</p>
+            </div>
+            <div class="bg-slate-900/50 rounded-2xl p-4 border border-slate-700">
+              <p class="text-slate-300 text-sm">Combo</p>
+              <p id="comboEl" class="text-2xl font-extrabold text-fuchsia-300">0</p>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <div class="flex justify-between text-sm mb-1">
+              <span>XP</span>
+              <span><span id="xpEl">0</span> / <span id="xpTargetEl">100</span></span>
+            </div>
+            <div class="w-full bg-slate-700 rounded-full h-3 overflow-hidden">
+              <div id="xpBar" class="h-3 bg-gradient-to-r from-fuchsia-400 to-cyan-400 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <div class="flex justify-between text-sm mb-1"><span>❤️ Moral</span><span id="moralValue">50</span></div>
+              <div class="w-full bg-slate-700 rounded-full h-3 overflow-hidden"><div id="moralBar" class="h-3 bg-rose-400 rounded-full transition-all duration-500" style="width:50%"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-sm mb-1"><span>⚖️ Tanggung Jawab</span><span id="dutyValue">50</span></div>
+              <div class="w-full bg-slate-700 rounded-full h-3 overflow-hidden"><div id="dutyBar" class="h-3 bg-amber-400 rounded-full transition-all duration-500" style="width:50%"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-sm mb-1"><span>🤝 Sosial</span><span id="socialValue">50</span></div>
+              <div class="w-full bg-slate-700 rounded-full h-3 overflow-hidden"><div id="socialBar" class="h-3 bg-emerald-400 rounded-full transition-all duration-500" style="width:50%"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-sm mb-1"><span>🧠 Pengetahuan</span><span id="knowledgeValue">50</span></div>
+              <div class="w-full bg-slate-700 rounded-full h-3 overflow-hidden"><div id="knowledgeBar" class="h-3 bg-cyan-400 rounded-full transition-all duration-500" style="width:50%"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass rounded-3xl p-5 shadow-xl">
+          <h3 class="text-xl font-bold mb-4">Progres Cerita</h3>
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <div class="bg-slate-900/50 rounded-2xl p-4 border border-slate-700">
+              <p class="text-slate-300 text-sm">Episode</p>
+              <p id="episodeEl" class="text-2xl font-extrabold">0</p>
+            </div>
+            <div class="bg-slate-900/50 rounded-2xl p-4 border border-slate-700">
+              <p class="text-slate-300 text-sm">Skor</p>
+              <p id="scoreEl" class="text-2xl font-extrabold">0</p>
+            </div>
+          </div>
+          <div class="w-full bg-slate-700 rounded-full h-3 overflow-hidden mb-4">
+            <div id="storyProgressBar" class="h-3 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full transition-all duration-500" style="width: 0%"></div>
+          </div>
+          <div class="bg-slate-900/50 rounded-2xl p-4 border border-slate-700">
+            <p class="text-slate-300 text-sm">Predikat Saat Ini</p>
+            <p id="liveRankEl" class="text-xl font-extrabold text-yellow-300">Warga Biasa</p>
+          </div>
+        </div>
+
+        <div class="glass rounded-3xl p-5 shadow-xl">
+          <h3 class="text-xl font-bold mb-4">Target</h3>
+          <div class="space-y-3 text-slate-200">
+            <div class="bg-fuchsia-500/10 border border-fuchsia-300/20 rounded-2xl p-3">Ambil keputusan yang bijak</div>
+            <div class="bg-cyan-500/10 border border-cyan-300/20 rounded-2xl p-3">Naik level lewat XP</div>
+            <div class="bg-emerald-500/10 border border-emerald-300/20 rounded-2xl p-3">Raih ending terbaik di akhir cerita</div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="xl:col-span-3 space-y-6">
+        <section id="introScreen" class="glass rounded-3xl p-8 shadow-xl fade-in">
+          <div class="grid lg:grid-cols-2 gap-6 items-center">
+            <div>
+              <h2 class="text-3xl font-extrabold mb-3">Mulai Cerita</h2>
+              <p class="text-slate-200 leading-relaxed mb-4">Masukkan nama pemain, lalu masuk ke story game interaktif. Setiap episode punya 4 pilihan jawaban, dan hasilnya akan memengaruhi status karaktermu.</p>
+              <div class="bg-slate-900/40 rounded-3xl p-5 border border-slate-700 mb-5">
+                <label for="playerNameInput" class="block text-sm text-slate-300 mb-2">Nama Pemain</label>
+                <input id="playerNameInput" type="text" placeholder="Contoh: Raihan" class="w-full rounded-2xl px-4 py-3 bg-slate-800/80 border border-slate-600 text-white placeholder:text-slate-400 outline-none focus:border-fuchsia-300 focus:ring-2 focus:ring-fuchsia-300/20" />
+                <p id="nameWarning" class="hidden text-rose-300 text-sm mt-2">Silakan isi nama pemain terlebih dahulu.</p>
+              </div>
+              <button id="startBtn" class="bg-fuchsia-400 text-slate-900 font-bold px-6 py-3 rounded-2xl shadow-lg hover:bg-fuchsia-300 transition pulse-soft">Masuk ke Cerita</button>
+            </div>
+            <div class="bg-gradient-to-br from-fuchsia-400/10 to-cyan-500/10 border border-cyan-200/10 rounded-3xl p-6">
+              <div class="text-7xl text-center mb-4">📖</div>
+              <p class="text-slate-200 text-center">Ini bukan cuma kuis. Kamu menjalani kehidupan karakter, membuat keputusan, mengumpulkan XP, naik level, dan membuka ending berdasarkan pilihanmu.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="storyScreen" class="hidden glass rounded-3xl p-6 shadow-xl fade-in">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+            <div>
+              <p class="text-slate-300 text-sm">Episode <span id="storyNumber">1</span> dari <span id="totalStories">8</span></p>
+              <h2 id="storyTitle" class="text-3xl font-extrabold mt-1">Judul Cerita</h2>
+              <p id="storyMeta" class="text-fuchsia-300 mt-1 font-semibold">Lokasi • Tema</p>
+            </div>
+            <div class="bg-slate-900/50 rounded-2xl px-4 py-3 border border-slate-700">
+              <p class="text-slate-300 text-sm">Fase</p>
+              <p id="phaseEl" class="text-xl font-bold text-yellow-300">Awal Cerita</p>
+            </div>
+          </div>
+
+          <div class="bg-slate-950/30 rounded-3xl p-6 border border-slate-700">
+            <div class="bg-gradient-to-r from-fuchsia-500/10 to-cyan-500/10 rounded-3xl p-5 border border-slate-700 mb-6">
+              <p id="storyText" class="text-xl leading-relaxed text-slate-100">Narasi cerita akan tampil di sini.</p>
+            </div>
+
+            <h3 class="text-lg font-bold mb-4 text-slate-200">Apa yang akan kamu lakukan?</h3>
+            <div id="choicesEl" class="grid md:grid-cols-2 gap-4"></div>
+
+            <div id="levelUpBox" class="hidden mt-6 rounded-2xl p-4 border bg-yellow-400/10 border-yellow-300/30 text-yellow-100"></div>
+            <div id="effectBox" class="hidden mt-4 rounded-2xl p-4 border"></div>
+
+            <div class="mt-6 flex justify-end">
+              <button id="nextBtn" class="hidden bg-yellow-400 text-slate-900 hover:bg-yellow-300 transition px-5 py-3 rounded-2xl font-bold">Lanjut Cerita</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="resultScreen" class="hidden glass rounded-3xl p-8 shadow-xl fade-in text-center">
+          <div class="text-7xl mb-4">🌟</div>
+          <h2 class="text-3xl md:text-4xl font-extrabold mb-3">Cerita Selesai</h2>
+          <p id="finalPlayerName" class="text-fuchsia-300 font-bold text-xl mb-2">Pemain</p>
+          <p class="text-slate-200 mb-6">Inilah akhir perjalananmu sebagai warga negara muda dalam story game PKN.</p>
+          <div class="grid md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-slate-900/50 rounded-2xl p-5 border border-slate-700"><p class="text-slate-300">Skor Akhir</p><p id="finalScore" class="text-3xl font-extrabold text-yellow-300">0</p></div>
+            <div class="bg-slate-900/50 rounded-2xl p-5 border border-slate-700"><p class="text-slate-300">Rata-rata Status</p><p id="finalAverage" class="text-3xl font-extrabold text-emerald-300">0</p></div>
+            <div class="bg-slate-900/50 rounded-2xl p-5 border border-slate-700"><p class="text-slate-300">Level Akhir</p><p id="finalLevel" class="text-3xl font-extrabold text-cyan-300">1</p></div>
+            <div class="bg-slate-900/50 rounded-2xl p-5 border border-slate-700"><p class="text-slate-300">Ending</p><p id="finalRank" class="text-xl font-extrabold text-fuchsia-300">Warga Teladan</p></div>
+          </div>
+          <div id="badgeBox" class="mb-6"></div>
+          <div id="finalSummary" class="bg-slate-900/50 rounded-3xl p-5 border border-slate-700 text-left text-slate-200 max-w-3xl mx-auto mb-6"></div>
+          <button id="playAgainBtn" class="bg-fuchsia-400 text-slate-900 px-6 py-3 rounded-2xl font-bold hover:bg-fuchsia-300 transition">Main Lagi</button>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <audio id="clickSound" preload="auto">
+    <source src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg" type="audio/ogg">
+  </audio>
+  <audio id="levelUpSound" preload="auto">
+    <source src="https://actions.google.com/sounds/v1/cartoon/concussive_hit_guitar_boing.ogg" type="audio/ogg">
+  </audio>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const stories = [
+        {
+          title: 'Hari Pertama di Sekolah',
+          theme: 'Toleransi',
+          location: 'Sekolah',
+          phase: 'Pembukaan',
+          text: 'Hari pertama masuk sekolah, kamu duduk bersama teman baru yang berasal dari daerah dan agama berbeda. Saat istirahat, ia terlihat canggung dan sendirian. Semua mata seperti menunggu apa yang akan kamu lakukan.',
+          choices: [
+            { text: 'Menyapa, mengajak ngobrol, dan mengenalkannya ke teman lain', effect: { moral: 10, duty: 2, social: 14, knowledge: 4 }, xp: 28, feedback: 'Kamu menunjukkan toleransi, empati, dan semangat persatuan.' },
+            { text: 'Mengingatkan teman lain agar tidak mengejeknya', effect: { moral: 12, duty: 4, social: 10, knowledge: 6 }, xp: 30, feedback: 'Kamu bukan hanya baik, tetapi juga berani membela yang benar.' },
+            { text: 'Membiarkannya sendiri karena merasa itu bukan urusanmu', effect: { moral: -2, duty: 0, social: -8, knowledge: 0 }, xp: 8, feedback: 'Kamu tidak menyakiti, tetapi belum menunjukkan kepedulian sosial.' },
+            { text: 'Ikut mengejek karena teman lain juga melakukannya', effect: { moral: -14, duty: -2, social: -16, knowledge: -2 }, xp: 0, feedback: 'Tindakan ini bertentangan dengan nilai kemanusiaan dan persatuan.' }
+          ]
+        },
+        {
+          title: 'Pemilihan Ketua Kelas',
+          theme: 'Demokrasi',
+          location: 'Kelas',
+          phase: 'Konflik Awal',
+          text: 'Kelasmu mengadakan pemilihan ketua kelas. Beberapa teman mulai saling memengaruhi dan bahkan menyebarkan ejekan pada kandidat lain. Kamu diminta ikut menentukan suasana pemilihan.',
+          choices: [
+            { text: 'Mengajak teman menjaga pemilihan tetap jujur dan tertib', effect: { moral: 8, duty: 8, social: 6, knowledge: 12 }, xp: 26, feedback: 'Kamu menerapkan nilai demokrasi secara sehat dan bertanggung jawab.' },
+            { text: 'Memilih sesuai hati nurani lalu menghargai hasilnya', effect: { moral: 6, duty: 6, social: 4, knowledge: 10 }, xp: 22, feedback: 'Kamu berpartisipasi dengan baik dan menghormati keputusan bersama.' },
+            { text: 'Tidak peduli dan memilih diam saja', effect: { moral: -2, duty: -2, social: -2, knowledge: -8 }, xp: 6, feedback: 'Kamu kehilangan kesempatan berpartisipasi dalam kehidupan demokratis.' },
+            { text: 'Mendukung kandidat favorit dengan memaksa teman lain', effect: { moral: -10, duty: -4, social: -8, knowledge: -6 }, xp: 0, feedback: 'Memaksakan kehendak bertentangan dengan semangat demokrasi.' }
+          ]
+        },
+        {
+          title: 'Kerja Bakti Sabtu Pagi',
+          theme: 'Gotong Royong',
+          location: 'Lingkungan Rumah',
+          phase: 'Perkembangan',
+          text: 'Ketua RT mengumumkan kerja bakti membersihkan lingkungan. Beberapa temanmu memilih bermain game di rumah dan mengajakmu ikut. Kamu harus memutuskan apakah akan hadir atau tidak.',
+          choices: [
+            { text: 'Datang tepat waktu dan membantu sampai selesai', effect: { moral: 8, duty: 14, social: 10, knowledge: 2 }, xp: 28, feedback: 'Kamu menunjukkan gotong royong dan tanggung jawab sosial yang tinggi.' },
+            { text: 'Datang lalu mengajak teman lain ikut membantu', effect: { moral: 10, duty: 12, social: 12, knowledge: 4 }, xp: 30, feedback: 'Kamu menjadi penggerak kebaikan di lingkunganmu.' },
+            { text: 'Datang sebentar untuk absen lalu pulang', effect: { moral: -2, duty: -8, social: -4, knowledge: 0 }, xp: 5, feedback: 'Kamu hadir, tetapi belum benar-benar bertanggung jawab.' },
+            { text: 'Tidak datang tanpa alasan yang jelas', effect: { moral: -8, duty: -14, social: -8, knowledge: 0 }, xp: 0, feedback: 'Ini menunjukkan kurangnya kepedulian terhadap lingkungan bersama.' }
+          ]
+        },
+        {
+          title: 'Pesan Berantai di Grup Kelas',
+          theme: 'Etika Digital',
+          location: 'Rumah',
+          phase: 'Pilihan Sulit',
+          text: 'Malam hari, di grup kelas beredar pesan yang menuduh seorang siswa melakukan sesuatu yang buruk. Informasinya belum jelas, tetapi banyak teman sudah meneruskannya. Kamu diminta ikut menyebarkan atau menanggapi.',
+          choices: [
+            { text: 'Memeriksa kebenaran informasi dan mengingatkan teman agar tidak asal sebar', effect: { moral: 8, duty: 8, social: 4, knowledge: 14 }, xp: 30, feedback: 'Kamu bertindak bijak sebagai warga digital yang bertanggung jawab.' },
+            { text: 'Melapor ke wali kelas agar masalah tidak melebar', effect: { moral: 10, duty: 10, social: 2, knowledge: 10 }, xp: 28, feedback: 'Kamu memilih langkah aman dan bertanggung jawab.' },
+            { text: 'Keluar dari grup agar tidak ikut campur', effect: { moral: 0, duty: -2, social: -4, knowledge: 2 }, xp: 8, feedback: 'Kamu menghindari masalah, tetapi belum membantu meredakan situasi.' },
+            { text: 'Langsung meneruskan ke grup lain karena penasaran', effect: { moral: -10, duty: -8, social: -6, knowledge: -12 }, xp: 0, feedback: 'Menyebarkan informasi tanpa verifikasi dapat merugikan orang lain.' }
+          ]
+        },
+        {
+          title: 'Diskusi Kelompok Besar',
+          theme: 'Musyawarah',
+          location: 'Sekolah',
+          phase: 'Puncak Konflik',
+          text: 'Kelompokmu sedang menyusun presentasi tentang hak dan kewajiban warga negara. Pendapatmu berbeda dengan ketua kelompok, dan suasana mulai memanas. Semua orang menunggu reaksi darimu.',
+          choices: [
+            { text: 'Menyampaikan pendapat dengan tenang lalu mengajak musyawarah', effect: { moral: 8, duty: 4, social: 12, knowledge: 8 }, xp: 26, feedback: 'Kamu menerapkan musyawarah dengan baik dan menjaga kekompakan kelompok.' },
+            { text: 'Memberi kesempatan semua anggota bicara lalu merangkum solusi', effect: { moral: 10, duty: 6, social: 14, knowledge: 10 }, xp: 32, feedback: 'Kamu tampil sebagai pemimpin yang adil dan bijak.' },
+            { text: 'Diam terus walau tahu solusi yang benar', effect: { moral: 0, duty: 0, social: -2, knowledge: -6 }, xp: 8, feedback: 'Kamu tidak membuat konflik, tetapi belum berani berpartisipasi aktif.' },
+            { text: 'Marah dan memaksakan pendapat agar harus diterima', effect: { moral: -12, duty: -2, social: -14, knowledge: -2 }, xp: 0, feedback: 'Memaksakan kehendak merusak semangat kebersamaan.' }
+          ]
+        },
+        {
+          title: 'Fasilitas Umum Rusak',
+          theme: 'Hak dan Kewajiban',
+          location: 'Taman Kota',
+          phase: 'Menjelang Akhir',
+          text: 'Saat pulang, kamu melihat beberapa remaja mencoret bangku taman. Orang-orang di sekitar hanya melihat tanpa bertindak. Kamu sadar bahwa fasilitas umum adalah milik bersama yang harus dijaga.',
+          choices: [
+            { text: 'Menegur dengan sopan dan melapor kepada petugas jika perlu', effect: { moral: 10, duty: 12, social: 6, knowledge: 8 }, xp: 28, feedback: 'Kamu ikut menjaga hak bersama dan menjalankan kewajiban sebagai warga negara.' },
+            { text: 'Mendokumentasikan lalu melapor agar ada tindak lanjut', effect: { moral: 8, duty: 14, social: 4, knowledge: 10 }, xp: 28, feedback: 'Kamu bertindak cerdas dan bertanggung jawab.' },
+            { text: 'Diam saja karena takut repot', effect: { moral: -2, duty: -6, social: -2, knowledge: 0 }, xp: 6, feedback: 'Diam membuat kerusakan bisa terus terjadi.' },
+            { text: 'Ikut mencoret karena terlihat seru', effect: { moral: -14, duty: -14, social: -6, knowledge: -6 }, xp: 0, feedback: 'Merusak fasilitas umum bertentangan dengan tanggung jawab warga negara.' }
+          ]
+        },
+        {
+          title: 'Menolong Tetangga Lansia',
+          theme: 'Kepedulian Sosial',
+          location: 'Lingkungan',
+          phase: 'Ujian Karakter',
+          text: 'Tetanggamu yang sudah tua kesulitan membawa barang belanjaan. Di sisi lain, kamu sedang terburu-buru karena ingin segera pulang. Kamu harus mengambil keputusan cepat.',
+          choices: [
+            { text: 'Segera membantu sampai barang masuk ke rumah', effect: { moral: 12, duty: 4, social: 12, knowledge: 2 }, xp: 28, feedback: 'Kamu menunjukkan kepedulian yang sangat baik.' },
+            { text: 'Membantu sebentar lalu memastikan ada orang lain yang melanjutkan', effect: { moral: 8, duty: 4, social: 8, knowledge: 2 }, xp: 22, feedback: 'Pilihanmu tetap membantu dan cukup bertanggung jawab.' },
+            { text: 'Menyuruh orang lain saja tanpa membantu langsung', effect: { moral: -4, duty: 0, social: -4, knowledge: 0 }, xp: 6, feedback: 'Masih ada kepedulian, tetapi kamu menghindari tanggung jawab langsung.' },
+            { text: 'Pura-pura tidak melihat', effect: { moral: -12, duty: -2, social: -10, knowledge: 0 }, xp: 0, feedback: 'Kurangnya kepedulian sosial merusak hubungan bermasyarakat.' }
+          ]
+        },
+        {
+          title: 'Keputusan Terakhir',
+          theme: 'Karakter Warga Negara',
+          location: 'Aula Sekolah',
+          phase: 'Penentuan Ending',
+          text: 'Pada akhir semester, sekolah memilih siswa teladan berdasarkan sikap, tanggung jawab, dan kepedulian sosial. Gurumu meminta refleksi terakhir: bagaimana kamu ingin dikenal oleh lingkungan sekitarmu?',
+          choices: [
+            { text: 'Sebagai pribadi jujur, peduli, dan bertanggung jawab', effect: { moral: 12, duty: 10, social: 10, knowledge: 6 }, xp: 30, feedback: 'Pilihan ini menguatkan karakter positif sebagai warga negara muda.' },
+            { text: 'Sebagai penggerak yang mengajak orang lain berbuat baik', effect: { moral: 10, duty: 10, social: 12, knowledge: 8 }, xp: 32, feedback: 'Kamu tidak hanya baik untuk diri sendiri, tetapi juga menginspirasi orang lain.' },
+            { text: 'Sebagai orang netral yang tidak ingin terlibat apa pun', effect: { moral: 0, duty: -2, social: -4, knowledge: 0 }, xp: 8, feedback: 'Bersikap netral memang aman, tetapi membuatmu kehilangan peran positif di masyarakat.' },
+            { text: 'Sebagai orang yang penting terlihat hebat meski melanggar aturan', effect: { moral: -12, duty: -10, social: -8, knowledge: -2 }, xp: 0, feedback: 'Mencari pengakuan tanpa nilai yang baik akan merugikan dirimu sendiri.' }
+          ]
+        }
+      ];
+
+      const startBtn = document.getElementById('startBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const playAgainBtn = document.getElementById('playAgainBtn');
+      const introScreen = document.getElementById('introScreen');
+      const storyScreen = document.getElementById('storyScreen');
+      const resultScreen = document.getElementById('resultScreen');
+      const playerNameInput = document.getElementById('playerNameInput');
+      const nameWarning = document.getElementById('nameWarning');
+      const playerNameDisplay = document.getElementById('playerNameDisplay');
+      const finalPlayerName = document.getElementById('finalPlayerName');
+      const moralBar = document.getElementById('moralBar');
+      const dutyBar = document.getElementById('dutyBar');
+      const socialBar = document.getElementById('socialBar');
+      const knowledgeBar = document.getElementById('knowledgeBar');
+      const moralValue = document.getElementById('moralValue');
+      const dutyValue = document.getElementById('dutyValue');
+      const socialValue = document.getElementById('socialValue');
+      const knowledgeValue = document.getElementById('knowledgeValue');
+      const episodeEl = document.getElementById('episodeEl');
+      const scoreEl = document.getElementById('scoreEl');
+      const liveRankEl = document.getElementById('liveRankEl');
+      const storyNumber = document.getElementById('storyNumber');
+      const totalStories = document.getElementById('totalStories');
+      const storyTitle = document.getElementById('storyTitle');
+      const storyMeta = document.getElementById('storyMeta');
+      const phaseEl = document.getElementById('phaseEl');
+      const storyText = document.getElementById('storyText');
+      const choicesEl = document.getElementById('choicesEl');
+      const effectBox = document.getElementById('effectBox');
+      const levelUpBox = document.getElementById('levelUpBox');
+      const finalScore = document.getElementById('finalScore');
+      const finalAverage = document.getElementById('finalAverage');
+      const finalLevel = document.getElementById('finalLevel');
+      const finalRank = document.getElementById('finalRank');
+      const finalSummary = document.getElementById('finalSummary');
+      const badgeBox = document.getElementById('badgeBox');
+      const levelEl = document.getElementById('levelEl');
+      const comboEl = document.getElementById('comboEl');
+      const xpEl = document.getElementById('xpEl');
+      const xpTargetEl = document.getElementById('xpTargetEl');
+      const xpBar = document.getElementById('xpBar');
+      const storyProgressBar = document.getElementById('storyProgressBar');
+      const clickSound = document.getElementById('clickSound');
+      const levelUpSound = document.getElementById('levelUpSound');
+
+      totalStories.textContent = stories.length;
+
+      let playerName = '';
+      let currentIndex = 0;
+      let score = 0;
+      let level = 1;
+      let xp = 0;
+      let combo = 0;
+      let answered = false;
+      let stats = { moral: 50, duty: 50, social: 50, knowledge: 50 };
+
+      function clamp(value) {
+        return Math.max(0, Math.min(100, value));
+      }
+
+      function safePlay(audio) {
+        if (!audio) return;
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+      }
+
+      function xpTarget() {
+        return 100 + (level - 1) * 25;
+      }
+
+      function averageStats() {
+        return Math.round((stats.moral + stats.duty + stats.social + stats.knowledge) / 4);
+      }
+
+      function getEnding(avg, lv) {
+        if (avg >= 90 && lv >= 4) return '🔥 Legenda Warga Negara';
+        if (avg >= 85) return '🌟 Warga Teladan';
+        if (avg >= 70) return '✨ Penggerak Kebaikan';
+        if (avg >= 55) return '📘 Warga Berkembang';
+        return '⚠️ Perlu Pembinaan';
+      }
+
+      function getBadge(avg, lv) {
+        if (avg >= 90 && lv >= 4) return 'Mahkota Nusantara';
+        if (avg >= 85) return 'Lencana Teladan';
+        if (avg >= 70) return 'Bintang Kebaikan';
+        if (avg >= 55) return 'Tunas Karakter';
+        return 'Badge Pembelajar';
+      }
+
+      function updateUI() {
+        moralBar.style.width = `${stats.moral}%`;
+        dutyBar.style.width = `${stats.duty}%`;
+        socialBar.style.width = `${stats.social}%`;
+        knowledgeBar.style.width = `${stats.knowledge}%`;
+        moralValue.textContent = stats.moral;
+        dutyValue.textContent = stats.duty;
+        socialValue.textContent = stats.social;
+        knowledgeValue.textContent = stats.knowledge;
+        episodeEl.textContent = currentIndex;
+        scoreEl.textContent = score;
+        levelEl.textContent = level;
+        comboEl.textContent = combo;
+        xpEl.textContent = xp;
+        xpTargetEl.textContent = xpTarget();
+        xpBar.style.width = `${Math.min(100, (xp / xpTarget()) * 100)}%`;
+        liveRankEl.textContent = getEnding(averageStats(), level);
+        storyProgressBar.style.width = `${(currentIndex / stories.length) * 100}%`;
+      }
+
+      function resetGame() {
+        currentIndex = 0;
+        score = 0;
+        level = 1;
+        xp = 0;
+        combo = 0;
+        answered = false;
+        stats = { moral: 50, duty: 50, social: 50, knowledge: 50 };
+        effectBox.className = 'hidden mt-4 rounded-2xl p-4 border';
+        levelUpBox.className = 'hidden mt-6 rounded-2xl p-4 border bg-yellow-400/10 border-yellow-300/30 text-yellow-100';
+        nextBtn.classList.add('hidden');
+        updateUI();
+      }
+
+      function startGame() {
+        const input = playerNameInput.value.trim();
+        if (!input) {
+          nameWarning.classList.remove('hidden');
+          playerNameInput.focus();
+          return;
+        }
+        playerName = input;
+        playerNameDisplay.textContent = playerName;
+        finalPlayerName.textContent = `Pemain: ${playerName}`;
+        nameWarning.classList.add('hidden');
+        resetGame();
+        introScreen.classList.add('hidden');
+        resultScreen.classList.add('hidden');
+        storyScreen.classList.remove('hidden');
+        loadStory();
+      }
+
+      function loadStory() {
+        answered = false;
+        effectBox.className = 'hidden mt-4 rounded-2xl p-4 border';
+        levelUpBox.className = 'hidden mt-6 rounded-2xl p-4 border bg-yellow-400/10 border-yellow-300/30 text-yellow-100';
+        nextBtn.classList.add('hidden');
+
+        if (currentIndex >= stories.length) {
+          finishGame();
+          return;
+        }
+
+        const story = stories[currentIndex];
+        storyNumber.textContent = currentIndex + 1;
+        storyTitle.textContent = story.title;
+        storyMeta.textContent = `${story.location} • ${story.theme}`;
+        phaseEl.textContent = story.phase;
+        storyText.textContent = story.text;
+        choicesEl.innerHTML = '';
+
+        story.choices.forEach(choice => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'card-hover text-left w-full bg-slate-800/70 hover:bg-slate-700 hover:shadow-xl border border-slate-600 rounded-2xl p-4 transition duration-200';
+          btn.innerHTML = `<span class="font-semibold">${choice.text}</span>`;
+          btn.addEventListener('click', () => chooseOption(btn, choice));
+          choicesEl.appendChild(btn);
+        });
+
+        episodeEl.textContent = currentIndex + 1;
+      }
+
+      function disableChoices() {
+        document.querySelectorAll('#choicesEl button').forEach(btn => {
+          btn.disabled = true;
+          btn.classList.add('opacity-80', 'cursor-not-allowed');
+        });
+      }
+
+      function effectText(effect) {
+        const labels = { moral: 'Moral', duty: 'Tanggung Jawab', social: 'Sosial', knowledge: 'Pengetahuan' };
+        return Object.entries(effect)
+          .filter(([, v]) => v !== 0)
+          .map(([k, v]) => `${labels[k]} ${v > 0 ? '+' : ''}${v}`)
+          .join(' • ');
+      }
+
+      function addXp(amount) {
+        let leveledUp = false;
+        xp += amount;
+        while (xp >= xpTarget()) {
+          xp -= xpTarget();
+          level += 1;
+          leveledUp = true;
+        }
+        if (leveledUp) {
+          levelUpBox.classList.remove('hidden');
+          levelUpBox.innerHTML = `<p class="font-bold text-lg mb-1">LEVEL UP! 🎉</p><p>Kamu naik ke level <b>${level}</b>. Karaktermu makin berkembang sebagai warga negara hebat.</p>`;
+          safePlay(levelUpSound);
+        }
+      }
+
+      function chooseOption(button, choice) {
+        if (answered) return;
+        answered = true;
+        safePlay(clickSound);
+        disableChoices();
+
+        stats.moral = clamp(stats.moral + choice.effect.moral);
+        stats.duty = clamp(stats.duty + choice.effect.duty);
+        stats.social = clamp(stats.social + choice.effect.social);
+        stats.knowledge = clamp(stats.knowledge + choice.effect.knowledge);
+
+        const total = Object.values(choice.effect).reduce((a, b) => a + b, 0);
+        if (total > 0) combo += 1;
+        else combo = 0;
+
+        const comboBonus = combo >= 2 ? combo * 2 : 0;
+        score = Math.max(0, score + Math.max(0, total) + comboBonus + Math.min(0, total));
+        addXp(choice.xp + comboBonus);
+        updateUI();
+
+        button.classList.remove('bg-slate-800/70');
+        effectBox.classList.remove('hidden');
+
+        if (total >= 0) {
+          button.classList.add('bg-emerald-500/20', 'border-emerald-300');
+          effectBox.classList.add('bg-emerald-500/10', 'border-emerald-300/30', 'text-emerald-100');
+        } else {
+          button.classList.add('bg-rose-500/20', 'border-rose-300');
+          effectBox.classList.add('bg-rose-500/10', 'border-rose-300/30', 'text-rose-100');
+        }
+
+        effectBox.innerHTML = `
+          <p class="font-bold text-lg mb-1">Dampak Pilihan</p>
+          <p class="mb-2">${choice.feedback}</p>
+          <p class="text-sm font-semibold mb-1">${effectText(choice.effect) || 'Tidak ada perubahan'}</p>
+          <p class="text-sm">XP +${choice.xp}${comboBonus ? ` • Bonus Combo +${comboBonus}` : ''}</p>
+        `;
+
+        nextBtn.classList.remove('hidden');
+        nextBtn.textContent = currentIndex === stories.length - 1 ? 'Lihat Ending' : 'Lanjut Cerita';
+      }
+
+      function finishGame() {
+        const avg = averageStats();
+        const ending = getEnding(avg, level);
+        const badge = getBadge(avg, level);
+
+        storyScreen.classList.add('hidden');
+        resultScreen.classList.remove('hidden');
+        finalPlayerName.textContent = `Pemain: ${playerName || 'Tanpa Nama'}`;
+        finalScore.textContent = score;
+        finalAverage.textContent = avg;
+        finalLevel.textContent = level;
+        finalRank.textContent = ending;
+        badgeBox.innerHTML = `<div class="inline-flex items-center gap-3 bg-yellow-400/10 border border-yellow-300/30 text-yellow-100 rounded-2xl px-5 py-3"><span class="text-2xl">🏅</span><span class="font-bold">Badge: ${badge}</span></div>`;
+
+        let summary = '';
+        if (ending.includes('Legenda')) {
+          summary = `${playerName} mencapai puncak perkembangan karakter. Pilihan yang diambil menunjukkan kualitas luar biasa sebagai warga negara muda: bijak, peduli, bertanggung jawab, dan mampu menjadi teladan bagi orang lain.`;
+        } else if (ending.includes('Teladan')) {
+          summary = `${playerName} berhasil menyelesaikan cerita dengan sangat baik. Keputusan-keputusan yang diambil mencerminkan nilai Pancasila, toleransi, tanggung jawab, dan kepedulian sosial yang tinggi.`;
+        } else if (ending.includes('Penggerak')) {
+          summary = `${playerName} telah menunjukkan banyak tindakan positif. Karakter ini sudah kuat sebagai contoh warga negara muda yang baik, walau masih ada ruang untuk berkembang lebih tinggi.`;
+        } else if (ending.includes('Berkembang')) {
+          summary = `${playerName} sedang belajar menjadi warga negara yang baik. Beberapa pilihan sudah tepat, tetapi masih diperlukan konsistensi dalam sikap dan tindakan.`;
+        } else {
+          summary = `${playerName} masih perlu banyak latihan dalam memahami nilai PKN di kehidupan sehari-hari. Cobalah lebih bijak, peduli, dan bertanggung jawab pada permainan berikutnya.`;
+        }
+
+        finalSummary.innerHTML = `
+          <p class="mb-4">${summary}</p>
+          <div class="grid md:grid-cols-2 gap-3 mt-4">
+            <div class="bg-slate-800/60 rounded-2xl p-4">❤️ Moral: <b>${stats.moral}</b></div>
+            <div class="bg-slate-800/60 rounded-2xl p-4">⚖️ Tanggung Jawab: <b>${stats.duty}</b></div>
+            <div class="bg-slate-800/60 rounded-2xl p-4">🤝 Sosial: <b>${stats.social}</b></div>
+            <div class="bg-slate-800/60 rounded-2xl p-4">🧠 Pengetahuan: <b>${stats.knowledge}</b></div>
+          </div>
+        `;
+      }
+
+      startBtn.addEventListener('click', startGame);
+      resetBtn.addEventListener('click', () => {
+        playerNameInput.value = '';
+        playerName = '';
+        playerNameDisplay.textContent = 'Belum ada pemain';
+        introScreen.classList.remove('hidden');
+        storyScreen.classList.add('hidden');
+        resultScreen.classList.add('hidden');
+        resetGame();
+      });
+      nextBtn.addEventListener('click', () => {
+        currentIndex += 1;
+        loadStory();
+      });
+      playAgainBtn.addEventListener('click', () => {
+        resultScreen.classList.add('hidden');
+        introScreen.classList.remove('hidden');
+      });
+      playerNameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') startGame();
+      });
+      playerNameInput.addEventListener('input', () => {
+        if (playerNameInput.value.trim()) nameWarning.classList.add('hidden');
+      });
+
+      updateUI();
+    });
+  </script>
+</body>
+</html>
